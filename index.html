@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Schéma Viewer</title>
+  <style>
+    @font-face {
+      font-family: "NN Nouvelle Grotesk STD";
+      src: url("https://db.onlinewebfonts.com/t/e313dfb6f0d4c85cabeac18e264e5f5e.eot");
+      src: url("https://db.onlinewebfonts.com/t/e313dfb6f0d4c85cabeac18e264e5f5e.eot?#iefix") format("embedded-opentype"),
+           url("https://db.onlinewebfonts.com/t/e313dfb6f0d4c85cabeac18e264e5f5e.woff2") format("woff2"),
+           url("https://db.onlinewebfonts.com/t/e313dfb6f0d4c85cabeac18e264e5f5e.woff") format("woff"),
+           url("https://db.onlinewebfonts.com/t/e313dfb6f0d4c85cabeac18e264e5f5e.ttf") format("truetype"),
+           url("https://db.onlinewebfonts.com/t/e313dfb6f0d4c85cabeac18e264e5f5e.svg#NN Nouvelle Grotesk STD") format("svg");
+    }
+    body {
+      font-family: "NN Nouvelle Grotesk STD", sans-serif;
+      background-color: #FFF7F3;
+      color: #220021;
+      text-align: center;
+      margin: 0;
+      padding-bottom: 100px;
+    }
+    /* Sélection des ensembles de schémas */
+    .selection-container {
+      display: flex;
+      justify-content: center;
+      gap: 50px;
+      margin-top: 50px;
+    }
+    .selection-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
+    .selection-item img {
+      width: 500px;
+      height: 500px;
+      border-radius: 10px;
+      transition: transform 0.3s ease;
+      object-fit: cover;
+    }
+    .selection-item img:hover {
+      transform: scale(1.1);
+    }
+    .selection-item p {
+      font-size: 22px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .schema-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin: 20px;
+    }
+    h1 {
+      font-size: 28px;
+      margin: 10px 0;
+    }
+    #schema, #extra-image {
+      max-width: 90%;
+      max-height: 60vh;
+      border-radius: 10px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+      margin: 20px 0;
+    }
+    .description {
+      font-size: 18px;
+      margin-top: 10px;
+    }
+    .controls {
+		position: fixed;
+		bottom: 0;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 80%;
+		display: flex;
+		justify-content: space-between;
+		padding: 20px;
+		background-color: #CC3D20;
+		border-radius: 10px 10px 0 0;
+    }
+    select, button {
+		flex: 1;
+		padding: 16px 0;
+		font-size: 18px;
+		font-weight: bold;
+		border: none;
+		border-radius: 8px;
+		background-color: #F44E27;
+		color: #220021;
+		cursor: pointer;
+		transition: background 0.3s ease, color 0.3s ease;
+		margin: 0 10px;
+    }
+    select:hover, button:hover {
+      background-color: #CC3D20;
+      color: #FFF7F3;
+    }
+	.help-popup {
+      display: none;
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #FFF7F3;
+      color: #220021;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+      width: 80%;
+      text-align: left;
+    }
+    .help-popup ul {
+      padding: 0;
+      list-style-type: none;
+    }
+    .help-popup ul li {
+      margin: 5px 0;
+    }
+    .download-bubble {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      background: #F44E27;
+      color: #FFF7F3;
+      padding: 15px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      text-align: center;
+    }
+    @media (max-width: 768px) {
+      .selection-container {
+        flex-direction: column;
+        align-items: center;
+      }
+      .download-bubble {
+        top: 20px;
+        bottom: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sélection des ensembles de schémas -->
+  <div class="selection-container" id="selection-container">
+    <div class="selection-item" onclick="selectSchemaSet('FunkyGate')">
+      <img src="FunkyGate.jpg" alt="FunkyGate">
+      <p>FunkyGate</p>
+    </div>
+    <div class="selection-item" onclick="selectSchemaSet('STID')">
+      <img src="STID.png" alt="STID">
+      <p>STID</p>
+    </div>
+  </div>
+
+  <!-- Zone d'affichage du schéma -->
+  <div class="schema-container" id="schema-container">
+    <h1 id="schema-title">Schéma</h1>
+    <img id="schema" src="" alt="Schéma">
+    <p class="description" id="schema-description">Description du schéma.</p>
+    <img id="extra-image" src="" alt="Image complémentaire">
+  </div>
+
+  <!-- Contrôles : liste déroulante -->
+  <div class="controls" id="controls" style="display: none;">
+    <select id="schema-select"></select>
+    <button id="help">Aide</button>
+  </div>
+
+    <!-- Popup d'aide -->
+  <div class="help-popup" id="help-popup">
+    <h2>Aide et ressources</h2>
+    <ul>
+      <li><a href="#">Lien vers la documentation</a></li>
+      <li><a href="#">Contact support</a></li>
+      <li><a href="#">FAQ</a></li>
+    </ul>
+  </div>
+  
+  <!-- Bulle de téléchargement -->
+  <div class="download-bubble" id="download-bubble">⬇️</div>
+
+  <script>
+    const schemaData = {
+      "FunkyGate": [
+        { title: "SpringCard", img: "FunkyGate/SpringCard - Seul.png", description: "Description du schéma 1", extraImg: "FunkyGate/SpringCard - Seul - Table.png"  },
+        { title: "Porte Gâche à impulsion", img: "FunkyGate/SpringCard - Porte Gâche à impulsion.png", description: "Description du schéma 2", extraImg: "FunkyGate/SpringCard - Porte Gâche à impulsion - Table.png" },
+        { title: "Porte Ventouse ou Gâche à rupture", img: "FunkyGate/SpringCard - Porte ventouse ou Gâche à rupture.png", description: "Description du schéma 3", extraImg: "FunkyGate/SpringCard - Porte ventouse ou Gâche à rupture - Table.png" },
+        { title: "Tripode Enzocard", img: "FunkyGate/SpringCard - Tripode Enzocard.png", description: "Description du schéma 4", extraImg: "FunkyGate/SpringCard - Tripode Enzocard - Table.png" },
+        { title: "Tripode Gunnebo", img: "FunkyGate/SpringCard - Tripode Gunnebo.png", description: "Description du schéma 5", extraImg: "FunkyGate/SpringCard - Tripode Gunnebo - Table.png.png" },
+        { title: "Tripode Retecks", img: "FunkyGate/SpringCard - Tripode Retecks.png", description: "Description du schéma 6", extraImg: "FunkyGate/SpringCard - Tripode Retecks - Table.png" },
+        { title: "PMR Enzocard", img: "FunkyGate/SpringCard - PMR Enzocard.png", description: "Description du schéma 7", extraImg: "FunkyGate/SpringCard - PMR Enzocard - Table.png" },
+        { title: "Sismo", img: "FunkyGate/SpringCard - Sismo.png", description: "Description du schéma 8", extraImg: "FunkyGate/SpringCard - Sismo - Table.png" },
+        { title: "Yanga", img: "FunkyGate/SpringCard - Yanga.png", description: "Description du schéma 9", extraImg: "FunkyGate/SpringCard - Yanga - Table.png" },
+        { title: "Grapivit", img: "FunkyGate/SpringCard - Grapivit.png", description: "Description du schéma 10", extraImg: "FunkyGate/SpringCard - Grapivit - Table.png" },
+		{ title: "Hydromassage", img: "FunkyGate/SpringCard - Hydromassage.png", description: "Description du schéma 11", extraImg: "FunkyGate/SpringCard - Hydromassage - Table.png" }
+      ],
+      "STID": [
+        { title: "STID", img: "STID/STID - Seul.png", description: "Description du schéma 1", extraImg: "STID/STID - Seul - Table.png" },
+        { title: "Porte Gâche à impulsion", img: "STID/STID - Porte Gâche à impulsion.png", description: "Description du schéma 2", extraImg: "STID/STID - Porte Gâche à impulsion - Table.png" },
+        { title: "Porte Ventouse ou Gâche à rupture", img: "STID/STID - Porte ventouse ou Gâche à rupture.png", description: "Description du schéma 3", extraImg: "STID/STID - Porte ventouse ou Gâche à rupture - Table.png" },
+        { title: "Tripode Enzocard", img: "STID/STID - Tripode Enzocard.png", description: "Description du schéma 4", extraImg: "STID/STID - Tripode Enzocard - Table.png" },
+        { title: "Tripode Gunnebo", img: "STID/STID - Tripode Gunnebo.png", description: "Description du schéma 5", extraImg: "STID/STID - Tripode Gunnebo - Table.png" },
+        { title: "Tripode Retecks", img: "STID/STID - Tripode Retecks.png", description: "Description du schéma 6", extraImg: "STID/STID - Tripode Retecks - Table.png" },
+        { title: "PMR Enzocard", img: "STID/STID - PMR Enzocard.png", description: "Description du schéma 7", extraImg: "STID/STID - PMR Enzocard - Table.png" },
+        { title: "Sismo", img: "STID/STID - Sismo.png", description: "Description du schéma 8", extraImg: "STID/STID - Sismo - Table.png" },
+        { title: "Yanga", img: "STID/STID - Yanga.png", description: "Description du schéma 9", extraImg: "STID/STID - Yanga - Table.png" },
+        { title: "Grapivit", img: "STID/STID - Grapivit.png", description: "Description du schéma 10", extraImg: "STID/STID - Grapivit - Table.png" },
+		{ title: "Hydromassage", img: "STID/STID - Hydromassage.png", description: "Description du schéma 11", extraImg: "STID/STID - Hydromassage - Table.png" }
+      ]
+    };
+
+    let currentSet = "";
+
+    function selectSchemaSet(setName) {
+      currentSet = setName;
+      document.getElementById("selection-container").style.display = "none";
+      document.getElementById("schema-container").style.display = "flex";
+      document.getElementById("controls").style.display = "flex";
+      populateSelect();
+      updateSchema(0);
+    }
+
+    function populateSelect() {
+      const select = document.getElementById("schema-select");
+      select.innerHTML = "";
+      schemaData[currentSet].forEach((schema, index) => {
+        let option = document.createElement("option");
+        option.value = index;
+        option.textContent = schema.title;
+        select.appendChild(option);
+      });
+    }
+
+    function updateSchema(index) {
+      const schema = schemaData[currentSet][index];
+      document.getElementById("schema").src = schema.img;
+      document.getElementById("schema-title").textContent = schema.title;
+      document.getElementById("schema-description").textContent = schema.description;
+      document.getElementById("extra-image").src = schema.extraImg;
+    }
+
+    document.getElementById("schema-select").addEventListener("change", function() {
+      updateSchema(this.value);
+    });
+	
+		
+    // Bouton Aide
+    document.getElementById("help").addEventListener("click", function(e) {
+      const popup = document.getElementById("help-popup");
+      popup.style.display = popup.style.display === "block" ? "none" : "block";
+      e.stopPropagation();
+    });
+
+    document.addEventListener("click", function(e) {
+      const popup = document.getElementById("help-popup");
+      if (!popup.contains(e.target)) {
+        popup.style.display = "none";
+      }
+    });
+
+    // Bulle de téléchargement
+    document.getElementById("download-bubble").addEventListener("click", function() {
+      const imgSrc = document.getElementById("schema").src;
+      const link = document.createElement("a");
+      link.href = imgSrc;
+      link.download = "schema.jpg";
+      link.click();
+	});  
+  </script>
+
+</body>
+</html>
